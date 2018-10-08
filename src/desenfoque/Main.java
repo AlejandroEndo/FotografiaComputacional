@@ -6,11 +6,16 @@ import processing.core.PVector;
 
 public class Main extends PApplet {
 
-	private PImage img, img2;
-	
+	private PImage img;
+	private PImage imgDif;
+
+	private int matrixsize;
 	private int index;
 	private int alto;
+	private int matrixValue;
 	
+	private float gaus;
+
 	public static void main(String[] args) {
 		PApplet.main("desenfoque.Main");
 	}
@@ -28,38 +33,69 @@ public class Main extends PApplet {
 	// } ;
 
 	public void settings() {
-		size(250, 800);
+		size(500, 800);
 	}
 
 	public void setup() {
 		index = 1;
 		img = loadImage("../data/desenfoque/florColor.jpg");
-		img2 = loadImage("../data/desenfoque/florColor.jpg");
 		
-		image(img2, 0, 0);
+		matrixsize = 3;
+		gaus = 1;
+		
+		for (int i = 0; i < matrixsize; i++) {
+			for (int j = 0; j < matrixsize; j++) {
+				matrix[i][j] *= gaus;
+				matrixValue += matrix[i][j];
+			}
+		}
+
+		imgDif = createImage(img.width, img.height, RGB);
+
+		image(img, 0, 0);
 		filtrado();
 	}
 
-	private void filtrado() {
-		int matrixsize = 3;
-		
-		img.loadPixels();
-		for (int x = 0; x < img.width; x++) {
-			for (int y = 0; y < img.height; y++) {
-				PVector c = convolution(x, y, matrix, matrixsize, img);
-				int loc = x + y * img.width;
-				img.pixels[loc] = color(c.x, c.y, c.z);
+	private void applyBlur() {
+		for (int i = 0; i < img.width; i++) {
+			for (int j = 0; j < img.height; j++) {
+				int index = i + j * img.width;
+
+				PVector c = convolution(i, j, matrix, matrixsize, img);
+
+				int r = (int) (red(img.get(i, j)) - c.x);
+				int g = (int) (green(img.get(i, j)) - c.x);
+				int b = (int) (blue(img.get(i, j)) - c.x);
+
+				imgDif.pixels[index] = color(r, g, b);
+				img.pixels[index] = color(c.x, c.y, c.z);
 			}
 		}
+	}
+	
+	private void filtrado() {
+		img.loadPixels();
+		imgDif.loadPixels();
+
+		for (int i = 0; i < 1; i++) {
+			applyBlur();
+		}
+
+		imgDif.updatePixels();
 		img.updatePixels();
+
 		img.resize(img.width / index, img.height / index);
+		imgDif.resize(imgDif.width / index, imgDif.height / index);
+
 		image(img, 0, img.height * index + alto);
+		image(imgDif, imgDif.width, imgDif.height * index + alto);
+
 		alto += img.height * index;
+
 		index++;
-		if(index < 5) {
+		if (index < 5) {
 			filtrado();
 		}
-		
 	}
 
 	private PVector convolution(int x, int y, float[][] matrix, int matrixsize, PImage img) {
@@ -89,9 +125,9 @@ public class Main extends PApplet {
 		}
 
 		// Make sure RGB is within range
-		rtotal = constrain(rtotal / 16, 0, 255);
-		gtotal = constrain(gtotal / 16, 0, 255);
-		btotal = constrain(btotal / 16, 0, 255);
+		rtotal = constrain(rtotal / matrixValue, 0, 255);
+		gtotal = constrain(gtotal / matrixValue, 0, 255);
+		btotal = constrain(btotal / matrixValue, 0, 255);
 
 		// Return the resulting color
 		return new PVector(rtotal, gtotal, btotal);

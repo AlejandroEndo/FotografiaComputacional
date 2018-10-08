@@ -63,9 +63,9 @@ public class Main extends PApplet {
 		case 0:
 			pushStyle();
 			colorMode(RGB, 255, 255, 255, 100);
-			histogramaAcumuladoRGB(images[0], 0, false);
-			histogramaAcumuladoRGB(images[1], images[0].height, true);
-			combinarHistogramas();
+			histogramaYxy(images[0]);
+//			histogramaYxy(images[1]);
+//			combinarHistogramas();
 			popStyle();
 			break;
 		}
@@ -241,8 +241,6 @@ public class Main extends PApplet {
 			stroke(0, 0, 255);
 			line(i + 2, img.height + altura, i + 2, y + altura); // blue
 		}
-
 		image(img, 0, altura);
 	}
-
 }
